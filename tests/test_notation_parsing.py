@@ -9,6 +9,16 @@ import sys
 
 class TestFileFormatParsing(unittest.TestCase):
 
+    def setUp(self):
+        log = logging.getLogger('lyra')
+        log.debug('### calling setUp method...')
+
+
+    def tearDown(self):
+        log = logging.getLogger('lyra')
+        log.debug('### calling tearDown method...')
+
+
     def test_parser_reads_canonical_header_fields(self):
         log = logging.getLogger('lyra')
         parser = lyra.NotationParser()
