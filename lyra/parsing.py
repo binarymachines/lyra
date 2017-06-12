@@ -2,6 +2,7 @@
 
 import re
 import copy
+import json
 
 
 class MissingHeaderFieldException(Exception):
@@ -33,6 +34,14 @@ class Tune(object):
         return 'TUNE header: %s\nbody: %s' % (str(self._translated_header), '\n'.join(self._phrases))
 
 
+    def as_json(self):
+        data = {}
+        data['header'] = self._translated_header
+        data['body'] = self._phrases
+        return json.dumps(data)
+
+
+
     def translate_header(self, header_dict):
         result = {}
         result['title'] = header_dict['T']
@@ -44,9 +53,9 @@ class Tune(object):
         key_string = header_dict['K']
         mode = None
         key = key_string
-        for mode_abbr in ABCNotation.mode_map.keys():
-            rx = re.compile(mode_abbr, re.IGNORECASE)
-            match = rx.search(key_string)
+        for mode_abbr in ABCNotation.mode_map:
+            mode_rx = re.compile(mode_abbr, re.IGNORECASE)
+            match = mode_rx.search(key_string)
             if match:
                 mode = key_string[match.start():match.end()]
                 key = key_string[0:match.start()]
@@ -156,3 +165,14 @@ class NotationParser(object):
         return tbuilder.build()
 
 
+class ESTuneLoader(object):
+    def __init__(self, index_name, elasticsearch_client):
+        self.es_client = elasticsearch_client
+        self.index = index_name
+        self.parser = NotationParser()
+        self.es_object_type = 'abc_tune'
+
+
+    def load_tunefile(self, filename, **kwargs):
+        tune = self.parser.parse_file(filename)
+        self.es_client.index_doc(self.index, self.es_object_type, tune.as_json(), kwargs.get('id', None))

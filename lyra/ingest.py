@@ -2,8 +2,9 @@
 # placehoder module for Elasticsearch ingest operations
 
 
-import requests
+#import requests
 from elasticsearch import Elasticsearch
+
 
 
 
@@ -14,6 +15,7 @@ class ElasticsearchCluster(object):
 
     def add_host(self, hostname):
         self._hosts.append(hostname)
+        return self
 
 
     @property
@@ -23,13 +25,13 @@ class ElasticsearchCluster(object):
 
 
 class ElasticsearchDBClient(object):
-    def __init__(self, es_cluster, port, **kwargs):
+    def __init__(self, es_cluster, port=9200, **kwargs):
         self._es_client = None
         self._cluster = es_cluster
         self._port = port
 
 
-    def connect(self, username, password, **kwargs):
+    def connect(self, username=None, password=None, **kwargs):
         self._es_client = Elasticsearch(self._cluster.hosts,
                                         http_auth=(username, password),
                                         port=self._port,
@@ -42,7 +44,7 @@ class ElasticsearchDBClient(object):
 
 
 
-    def index_doc(self, index_name, doctype, id, json_doc):
+    def index_doc(self, index_name, doctype, json_doc, id=None):
         self._es_client.index(index=index_name,
                               doc_type=doctype,
                               id=id,
@@ -52,6 +54,9 @@ class ElasticsearchDBClient(object):
     def get_doc(self, index, id):
         return self._es_client.get(index=index, id=id)
 
+
+    def get_doc_count(self, index, doc_type):
+        return self._es_client.count(index=index)['count']
 
 
 class ESQuery(object):
@@ -67,5 +72,3 @@ class ESQueryBuilder(object):
 
     def build(self):
         return ESQuery()
-
-
